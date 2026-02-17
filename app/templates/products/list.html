@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Productos | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Gestión de Productos</h1>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('products.add_product') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Producto
+    </a>
+    {% endif %}
+</div>
+
+<div class="card shadow mb-4 fade-in">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">Listado de Repuestos</h6>
+        
+        <form class="form-inline" method="GET">
+            <div class="input-group">
+                <input type="text" class="form-control bg-light border-0 small" placeholder="Buscar por nombre, código..."
+                    aria-label="Search" aria-describedby="basic-addon2" name="search" value="{{ search_query if search_query else '' }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary" title="Limpiar búsqueda">
+                        <i class="fas fa-times fa-sm"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="dataTable" width="100%" cellspacing="0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="pl-4">Código / Producto</th>
+                        <th>Marca / Vehículo</th>
+                        <th class="text-center">Ubicación</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-right pr-4">Precio (USD)</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="{{ 'table-danger' if product.quantity <= product.min_stock else '' }}">
+                        <td class="pl-4">
+                            <div class="font-weight-bold text-gray-800">{{ product.name }}</div>
+                            <div class="small text-gray-600">
+                                <i class="fas fa-barcode fa-xs"></i> {{ product.part_number or 'S/N' }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-gray-800">{{ product.manufacturer or '-' }}</div>
+                            <span class="badge bg-light text-dark border">{{ product.compatibility or 'General' }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if product.location %}
+                            <span class="badge bg-info text-white"><i class="fas fa-map-marker-alt"></i> {{ product.location }}</span>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if product.quantity <= product.min_stock %}
+                                <span class="badge badge-stock-crit px-2 py-1">{{ product.quantity }}</span>
+                            {% elif product.quantity < (product.min_stock * 2) %}
+                                <span class="badge badge-stock-low px-2 py-1">{{ product.quantity }}</span>
+                            {% else %}
+                                <span class="badge badge-stock-ok px-2 py-1">{{ product.quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right pr-4 font-weight-bold text-gray-800">
+                            ${{ "%.2f"|format(product.price_usd) }}
+                        </td>
+                        <td class="text-center">
+                            {% if current_user.role == 'admin' %}
+                            <div class="d-flex justify-content-center" style="gap: 5px;">
+                                <a href="{{ url_for('products.edit_product', id=product.id) }}" class="btn btn-warning btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ url_for('products.delete_product', id=product.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">Solo lectura</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">No hay productos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

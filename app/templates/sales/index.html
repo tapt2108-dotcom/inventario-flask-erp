@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Ventas | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Registro de Ventas</h1>
+    <a href="{{ url_for('sales.new_sale') }}" class="btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-cash-register fa-sm text-white-50"></i> Nueva Venta
+    </a>
+</div>
+
+<!-- KPI Cards -->
+<div class="row fade-in">
+    <!-- Ventas Hoy -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ventas Hoy</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(today_total) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventas Mes -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Mes</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(month_total) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transacciones Mes -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Transacciones (Mes)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ month_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4 fade-in">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">Historial de Ventas</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="dataTable" width="100%" cellspacing="0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="pl-4">ID Venta</th>
+                        <th>Fecha / Hora</th>
+                        <th class="text-right">Total (USD)</th>
+                        <th class="text-right pr-4">Total (Bs)</th>
+                        <th>Items</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td class="pl-4 font-weight-bold text-gray-800">#{{ sale.id }}</td>
+                        <td>
+                            <div class="font-weight-bold text-gray-800">{{ sale.date.strftime('%d/%m/%Y') }}</div>
+                            <div class="small text-muted">{{ sale.date.strftime('%H:%M %p') }}</div>
+                        </td>
+                        <td class="text-right font-weight-bold text-success">
+                            ${{ "%.2f"|format(sale.total_usd) }}
+                        </td>
+                        <td class="text-right pr-4 text-gray-800">
+                             {{ "%.2f"|format(sale.total_bs) if sale.total_bs else '-' }} Bs
+                        </td>
+                        <td>
+                            <ul class="mb-0 small list-unstyled">
+                                {% for item in sale.items %}
+                                <li>
+                                    <span class="font-weight-bold">{{ item.quantity }}x</span> {{ item.product_name }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <img src="https://illustrations.popsy.co/gray/success.svg" width="150" class="mb-3 opacity-50">
+                            <p class="text-gray-600 mb-0">No hay ventas registradas aún.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimientos de Inventario | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Kardex de Inventario</h1>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('inventory.add_movement') }}" class="btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-exchange-alt fa-sm text-white-50"></i> Nuevo Movimiento
+    </a>
+    {% endif %}
+</div>
+
+<!-- History Card -->
+<div class="card shadow mb-4 fade-in">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+        <h6 class="m-0 font-weight-bold text-primary">Historial de Movimientos</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="dataTable" width="100%" cellspacing="0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="pl-4">Fecha / Hora</th>
+                        <th>Producto</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Responsable / Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements %}
+                    <tr>
+                        <td class="pl-4">
+                            <div class="font-weight-bold text-gray-800">{{ movement.date.strftime('%d/%m/%Y') }}</div>
+                            <div class="small text-muted">{{ movement.date.strftime('%H:%M %p') }}</div>
+                        </td>
+                        <td>
+                            <div class="font-weight-bold text-primary">{{ movement.product.name }}</div>
+                            <div class="small text-gray-600">{{ movement.product.part_number or 'S/N' }}</div>
+                        </td>
+                        <td class="text-center">
+                            {% if movement.type == 'entrada' %}
+                                <span class="badge bg-success text-white px-2 py-1"><i class="fas fa-arrow-down"></i> Entrada</span>
+                            {% elif movement.type == 'salida' %}
+                                <span class="badge bg-danger text-white px-2 py-1"><i class="fas fa-arrow-up"></i> Salida</span>
+                            {% elif movement.type == 'ajuste_entrada' %}
+                                <span class="badge bg-info text-white px-2 py-1"><i class="fas fa-sliders-h"></i> Ajuste (+)</span>
+                            {% elif movement.type == 'ajuste_salida' %}
+                                <span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-sliders-h"></i> Ajuste (-)</span>
+                            {% else %}
+                                <span class="badge bg-secondary text-white">{{ movement.type|capitalize }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center font-weight-bold text-gray-800">
+                            {{ movement.quantity }}
+                        </td>
+                        <td>
+                            <div class="text-gray-800">{{ movement.user.username if movement.user else 'Sistema' }}</div>
+                            <div class="small text-muted font-italic">"{{ movement.description or 'Sin descripción' }}"</div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <img src="https://illustrations.popsy.co/gray/time.svg" width="150" class="mb-3 opacity-50">
+                            <p class="text-gray-600 mb-0">No hay movimientos registrados.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Movimiento | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-xl-6 col-lg-8 col-md-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Registrar Movimiento de Inventario</h6>
+                <a href="{{ url_for('inventory.index') }}" class="btn btn-sm btn-secondary shadow-sm">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="product_id" class="form-label font-weight-bold">Seleccionar Producto <span class="text-danger">*</span></label>
+                        <select class="form-control form-select-lg" id="product_id" name="product_id" required>
+                            <option value="">Seleccione un producto...</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}" {{ 'selected' if selected_product_id == product.id else '' }}>
+                                {{ product.name }} (Stock: {{ product.quantity }}) - {{ product.part_number }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label font-weight-bold">Tipo de Movimiento <span class="text-danger">*</span></label>
+                            <select class="form-control" id="type" name="type" required onchange="updateIcon(this.value)">
+                                <option value="entrada" {{ 'selected' if selected_type == 'entrada' else '' }}>Entrada (Compra/Reabastecimiento)</option>
+                                <option value="salida" {{ 'selected' if selected_type == 'salida' else '' }}>Salida (Venta/Uso Interno)</option>
+                                <option value="ajuste_entrada" {{ 'selected' if selected_type == 'ajuste_entrada' else '' }}>Ajuste Inventario (+)</option>
+                                <option value="ajuste_salida" {{ 'selected' if selected_type == 'ajuste_salida' else '' }}>Ajuste Inventario (-)</option>
+                            </select>
+                            <div class="mt-2 text-center" id="type-icon-container">
+                                <!-- Icon will be placed here via JS -->
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label font-weight-bold">Cantidad <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-lg text-center font-weight-bold" id="quantity" name="quantity" min="1" required placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label font-weight-bold">Motivo / Descripción <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required placeholder="Describa el motivo del movimiento (Ej. Factura #123, Mermas, Ajuste anual...)"></textarea>
+                        <small class="form-text text-muted">Mínimo 5 caracteres para auditoría.</small>
+                    </div>
+
+                    <hr>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block shadow-sm">
+                        <i class="fas fa-save mr-2"></i> Registrar Movimiento
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateHelpText() {
+    const type = document.getElementById('type').value;
+    const helpText = document.getElementById('quantityHelp');
+    
+    if (type === 'ajuste') {
+        helpText.innerText = 'Ingrese la cantidad TOTAL que hay físicamente en el inventario.';
+    } else {
+        helpText.innerText = 'Ingrese la cantidad a agregar o descontar.';
+    }
+}
+updateHelpText();
+</script>
+{% endblock %}

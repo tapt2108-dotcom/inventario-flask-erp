@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Venta | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Punto de Venta</h1>
+    <div class="card border-left-info shadow-sm py-2 px-3">
+        <div class="d-flex align-items-center">
+            <div class="mr-3">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasa de Cambio</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.2f"|format(rate) }} Bs/$</div>
+            </div>
+            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row fade-in">
+    <!-- Selector de Productos -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-cart-plus mr-2"></i>Agregar Producto</h6>
+            </div>
+            <div class="card-body">
+                <form id="addItemForm">
+                    <div class="mb-3">
+                        <label for="product_select" class="form-label font-weight-bold">Buscar Producto</label>
+                        <select class="form-control form-select-lg" id="product_select" required>
+                            <option value="">Seleccione...</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}" 
+                                    data-price="{{ product.price_usd if product.price_usd else 0 }}"
+                                    data-name="{{ product.name }}"
+                                    data-max="{{ product.quantity }}">
+                                {{ product.name }} (Stock: {{ product.quantity }}) - ${{ "%.2f"|format(product.price_usd if product.price_usd else 0) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label font-weight-bold">Cantidad</label>
+                        <div class="input-group input-group-lg">
+                            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('quantity').stepDown()">-</button>
+                            <input type="number" class="form-control text-center font-weight-bold" id="quantity" value="1" min="1" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('quantity').stepUp()">+</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block shadow-sm">
+                        <i class="fas fa-plus-circle mr-2"></i> Agregar al Carrito
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de Venta -->
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow mb-4 h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-shopping-cart mr-2"></i>Detalle de Venta</h6>
+                <span class="badge bg-success fs-5 shadow-sm p-2" id="totalDisplay">$0.00</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <div class="table-responsive flex-grow-1">
+                    <table class="table table-hover align-middle" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-right">Subtotal</th>
+                                <th class="text-center"><i class="fas fa-trash"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartTableBody">
+                            <!-- JS populated -->
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-shopping-basket fa-3x mb-3 text-gray-300"></i>
+                                    <p>Carrito vacío</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Sección de Pago -->
+                <div class="mt-4 p-4 bg-light rounded border shadow-sm">
+                    <h6 class="font-weight-bold text-gray-800 mb-3 border-bottom pb-2">Procesar Pago</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small font-weight-bold text-muted text-uppercase">Pagado USD ($)</label>
+                            <input type="number" class="form-control form-control-lg font-weight-bold text-success" id="paid_usd" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small font-weight-bold text-muted text-uppercase">Pagado Bs</label>
+                            <input type="number" class="form-control form-control-lg font-weight-bold" id="paid_bs" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="h6 font-weight-bold text-gray-800">Total a Pagar:</span>
+                        <div class="text-end">
+                            <div id="finalTotalUsd" class="h5 font-weight-bold text-gray-800 mb-0">$0.00</div>
+                            <div id="finalTotalBs" class="small text-muted">0.00 Bs</div>
+                        </div>
+                    </div>
+                     <div class="d-flex justify-content-between align-items-center p-2 rounded" id="changeContainer">
+                        <span class="h6 font-weight-bold mb-0">Cambio / Diferencia:</span>
+                        <div class="text-end">
+                            <div id="changeUsd" class="h5 font-weight-bold mb-0">$0.00</div>
+                            <div id="changeBs" class="small">0.00 Bs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-success w-100 btn-lg mt-3 shadow" id="btnProcessSale" disabled>
+                    <i class="fas fa-check-circle mr-2"></i> Procesar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let cart = [];
+    const rate = parseFloat("{{ rate }}");
+
+    document.getElementById('addItemForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const select = document.getElementById('product_select');
+        const option = select.options[select.selectedIndex];
+        const qty = parseInt(document.getElementById('quantity').value);
+        
+        const productId = parseInt(select.value);
+        const price = parseFloat(option.dataset.price);
+        const name = option.dataset.name;
+        const maxStock = parseInt(option.dataset.max);
+
+        // Validar stock local
+        const currentInCart = cart.find(i => i.product_id === productId);
+        const currentQty = currentInCart ? currentInCart.quantity : 0;
+        
+        if (currentQty + qty > maxStock) {
+            alert('No hay suficiente stock disponible.');
+            return;
+        }
+
+        if (currentInCart) {
+            currentInCart.quantity += qty;
+        } else {
+            cart.push({
+                product_id: productId,
+                name: name,
+                price: price,
+                quantity: qty
+            });
+        }
+        
+        renderCart();
+        document.getElementById('addItemForm').reset();
+    });
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        renderCart();
+    }
+
+    function renderCart() {
+        const tbody = document.getElementById('cartTableBody');
+        tbody.innerHTML = '';
+        let total = 0;
+
+        cart.forEach((item, index) => {
+            const subtotal = item.price * item.quantity;
+            total += subtotal;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div class="font-weight-bold text-gray-800">${item.name}</div>
+                    <div class="small text-muted">$${item.price.toFixed(2)} c/u</div>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-light text-dark border">${item.quantity}</span>
+                </td>
+                <td class="text-right font-weight-bold">$${subtotal.toFixed(2)}</td>
+                <td class="text-center">
+                    <button class="btn btn-danger btn-sm rounded-circle shadow-sm" onclick="removeFromCart(${index})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('totalDisplay').innerText = `$${total.toFixed(2)}`;
+        
+        // Update payment section totals
+        const totalBs = total * rate;
+        document.getElementById('finalTotalUsd').innerText = `$${total.toFixed(2)}`;
+        document.getElementById('finalTotalBs').innerText = `${totalBs.toFixed(2)} Bs`;
+        
+        calculateChange();
+        
+        document.getElementById('btnProcessSale').disabled = cart.length === 0;
+    }
+
+    function calculateChange() {
+        const totalUsd = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const totalBs = totalUsd * rate;
+        
+        const paidUsd = parseFloat(document.getElementById('paid_usd').value) || 0;
+        const paidBs = parseFloat(document.getElementById('paid_bs').value) || 0;
+        
+        // Convert everything to USD for calculation
+        const paidInUsdEquivalent = paidUsd + (paidBs / rate);
+        const diffUsd = paidInUsdEquivalent - totalUsd;
+        const diffBs = diffUsd * rate;
+        
+        const elUsd = document.getElementById('changeUsd');
+        const elBs = document.getElementById('changeBs');
+        
+        const container = document.getElementById('changeContainer');
+
+        elUsd.innerText = `$${diffUsd.toFixed(2)}`;
+        elBs.innerText = `${diffBs.toFixed(2)} Bs`;
+        
+        if (diffUsd >= -0.01) { // Floating point tolerance
+            elUsd.classList.remove('text-danger');
+            elUsd.classList.add('text-success');
+            elBs.classList.remove('text-danger');
+            elBs.classList.add('text-success');
+            
+            container.classList.remove('bg-danger-light');
+            container.classList.add('bg-success-light');
+            
+            document.getElementById('btnProcessSale').disabled = cart.length === 0;
+        } else {
+            elUsd.classList.remove('text-success');
+            elUsd.classList.add('text-danger');
+            elBs.classList.remove('text-success');
+            elBs.classList.add('text-danger');
+            
+            container.classList.remove('bg-success-light');
+            container.classList.add('bg-danger-light');
+            // Optionally disable button if payment is insufficient
+            // document.getElementById('btnProcessSale').disabled = true; 
+        }
+    }
+
+    document.getElementById('paid_usd').addEventListener('input', calculateChange);
+    document.getElementById('paid_bs').addEventListener('input', calculateChange);
+
+    document.getElementById('btnProcessSale').addEventListener('click', function() {
+        if (!confirm('¿Procesar venta?')) return;
+        
+        fetch("{{ url_for('sales.create_sale') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: cart })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Venta procesada exitosamente');
+                window.location.href = "{{ url_for('sales.index') }}";
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(err => alert('Error al procesar venta'));
+    });
+</script>
+{% endblock %}

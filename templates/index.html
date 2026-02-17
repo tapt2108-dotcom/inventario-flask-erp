@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Inventario</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <!-- Fuente Google: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>📦 Inventario</h1>
+        <p>Sistema de gestión simple y elegante</p>
+      </header>
+
+      <section class="add-product-section">
+        <h2>Agregar Producto</h2>
+        <form id="productForm">
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input type="text" id="name" required placeholder="Ej. Laptop" />
+          </div>
+          <div class="form-group">
+            <label for="quantity">Cantidad</label>
+            <input
+              type="number"
+              id="quantity"
+              required
+              min="0"
+              placeholder="0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="price">Precio</label>
+            <input
+              type="number"
+              id="price"
+              required
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+          </div>
+          <button type="submit" class="btn-primary">Guardar Producto</button>
+        </form>
+      </section>
+
+      <section class="product-list-section">
+        <h2>Lista de Productos</h2>
+        <!-- aquí se insertarán los productos via JS -->
+        <div id="productList" class="product-grid"></div>
+      </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>

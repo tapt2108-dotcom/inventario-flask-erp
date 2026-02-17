@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Venta #{{ sale.id }} | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Detalles de Venta #{{ sale.id }}</h1>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Volver a Ventas
+    </a>
+</div>
+
+<div class="row fade-in">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                <h6 class="m-0 font-weight-bold text-primary">Items Vendidos</h6>
+                <span class="badge bg-light text-dark border">{{ sale.date.strftime('%d/%m/%Y %H:%M %p') }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" width="100%" cellspacing="0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="pl-4">Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-right">Precio Unit. ($)</th>
+                                <th class="text-right pr-4">Subtotal ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items %}
+                            <tr>
+                                <td class="pl-4">
+                                    <div class="font-weight-bold text-gray-800">{{ item.product_name }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border">{{ item.quantity }}</span>
+                                </td>
+                                <td class="text-right font-weight-bold">
+                                    ${{ "%.2f"|format(item.price_at_moment_usd) }}
+                                </td>
+                                <td class="text-right pr-4 font-weight-bold text-gray-800">
+                                    ${{ "%.2f"|format(item.price_at_moment_usd * item.quantity) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-light">
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold text-gray-600">Total USD:</td>
+                                <td class="text-right pr-4 h5 font-weight-bold text-success mb-0">${{ "%.2f"|format(sale.total_usd) }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold text-gray-600">Equivalente en Bs:</td>
+                                <td class="text-right pr-4 font-weight-bold text-gray-800">{{ "%.2f"|format(sale.total_bs) }} Bs</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-white">
+                <h6 class="m-0 font-weight-bold text-info">Información Adicional</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="small font-weight-bold text-muted text-uppercase d-block mb-1">Responsable</span>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ current_user.username }} 
+                        <!-- Note: Sale model doesn't currently store user_id, assuming current user or need migration if we want historical user -->
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <span class="small font-weight-bold text-muted text-uppercase d-block mb-1">Tasa de Cambio (Histórica)</span>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {% if sale.total_usd > 0 %}
+                            {{ "%.2f"|format(sale.total_bs / sale.total_usd) }} Bs/$
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Calculada al momento de la venta</small>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-outline-primary btn-block" onclick="window.print()">
+                        <i class="fas fa-print mr-2"></i> Imprimir Comprobante
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

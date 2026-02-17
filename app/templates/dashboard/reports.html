@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+    <h1 class="h3 mb-0 text-gray-800">Centro de Reportes</h1>
+    <div>
+        <a href="{{ url_for('reports.download_inventory_report') }}" class="btn btn-sm btn-primary shadow-sm mr-2">
+            <i class="fas fa-file-pdf fa-sm text-white-50"></i> Descargar Inventario
+        </a>
+        <a href="{{ url_for('reports.download_sales_report') }}" class="btn btn-sm btn-success shadow-sm">
+            <i class="fas fa-file-pdf fa-sm text-white-50"></i> Descargar Ventas
+        </a>
+    </div>
+</div>
+
+<div class="row fade-in">
+    <!-- Quick Actions Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <a href="{{ url_for('reports.no_rotation') }}" class="text-decoration-none">
+            <div class="card border-left-warning shadow h-100 py-2 hover-scale">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Análisis de Stock</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">Productos Sin Rotación</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row fade-in">
+    <!-- Gráfico Distribución Precios -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Distribución de Valor (Stock)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area" style="height: 320px;">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico Evolución Ventas -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-success">Evolución de Ventas (Últimos 7 días)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area" style="height: 320px;">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Common Chart Options
+    Chart.defaults.font.family = 'Plus Jakarta Sans';
+    Chart.defaults.color = '#858796';
+
+    // Gráfico de Precios (Top 10 most expensive or by category - simplifying to top 15 products by value for readability)
+    fetch('/api/products')
+        .then(response => response.json())
+        .then(data => {
+            // Sort by price desc and take top 15
+            const sortedData = data.sort((a, b) => b.price_usd - a.price_usd).slice(0, 15);
+            
+            const labels = sortedData.map(p => p.name.substring(0, 15) + (p.name.length > 15 ? '...' : ''));
+            const prices = sortedData.map(p => p.price_usd || 0);
+
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Precio Unitario ($)',
+                        data: prices,
+                        backgroundColor: '#4e73df',
+                        hoverBackgroundColor: '#2e59d9',
+                        borderColor: '#4e73df',
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+                    scales: {
+                        x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 6 } },
+                        y: { ticks: { padding: 10, callback: function(value) { return '$' + value; } }, grid: { color: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } },
+                    },
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgb(255,255,255)", bodyColor: "#858796", titleColor: '#6e707e', borderColor: '#dddfeb', borderWidth: 1, padding: 15, displayColors: false, intersect: false, mode: 'index', caretPadding: 10, callbacks: { label: function(context) { var label = context.dataset.label || ''; return label + ': $' + context.parsed.y; } } } }
+                }
+            });
+        });
+
+    // Gráfico de Ventas
+    fetch('/api/sales/stats')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: data.values,
+                        backgroundColor: "rgba(28, 200, 138, 0.05)",
+                        borderColor: "rgba(28, 200, 138, 1)",
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgba(28, 200, 138, 1)",
+                        pointBorderColor: "rgba(28, 200, 138, 1)",
+                        pointHoverRadius: 3,
+                        pointHoverBackgroundColor: "rgba(28, 200, 138, 1)",
+                        pointHoverBorderColor: "rgba(28, 200, 138, 1)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+                    scales: {
+                        x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 7 } },
+                        y: { ticks: { maxTicksLimit: 5, padding: 10, callback: function(value) { return '$' + value; } }, grid: { color: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } },
+                    },
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgb(255,255,255)", bodyColor: "#858796", titleColor: '#6e707e', borderColor: '#dddfeb', borderWidth: 1, padding: 15, displayColors: false, intersect: false, mode: 'index', caretPadding: 10, callbacks: { label: function(context) { var label = context.dataset.label || ''; return label + ': $' + context.parsed.y; } } } }
+                }
+            });
+        });
+</script>
+{% endblock %}

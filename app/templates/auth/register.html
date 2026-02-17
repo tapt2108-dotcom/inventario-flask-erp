@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="bg-login">
+    <div class="login-card">
+        <div class="text-center">
+            <h1 class="h4 text-gray-900 mb-4 fw-bold">Crear una Cuenta</h1>
+        </div>
+        <form class="user" method="post">
+            <div class="form-group mb-3">
+                <input type="text" class="form-control form-control-user" name="username" placeholder="Usuario" required>
+            </div>
+            <div class="form-group mb-3">
+                <input type="email" class="form-control form-control-user" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group mb-3">
+                <input type="password" class="form-control form-control-user" name="password" placeholder="Contraseña" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-user btn-block w-100">
+                Registrar Cuenta
+            </button>
+        </form>
+        <hr>
+        <div class="text-center">
+            <a class="small" href="{{ url_for('auth.login') }}">¿Ya tienes cuenta? Inicia Sesión</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

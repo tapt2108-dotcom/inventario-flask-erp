@@ -1,0 +1,332 @@
+{% extends "base.html" %} 
+
+{% block title %}Dashboard | Inventario Pro{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4 fade-in">
+  <h1 class="h3 mb-0 text-gray-800">Panel de Control</h1>
+  <a href="{{ url_for('reports.index') }}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+      <i class="fas fa-download fa-sm text-white-50"></i> Generar Reporte
+  </a>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row fade-in">
+
+  <!-- Total Products Card -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-primary shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+              Catálogo
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-products">0</div>
+            <div class="text-xs text-muted mt-1">Productos Registrados</div>
+          </div>
+          <div class="col-auto">
+            <div class="icon-circle bg-primary text-white p-3 rounded-circle">
+                <i class="fas fa-box fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Value Card -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-success shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+              Valorización
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-value">$0.00</div>
+            <div class="text-xs text-muted mt-1">Total en Inventario</div>
+          </div>
+          <div class="col-auto">
+            <div class="icon-circle bg-success text-white p-3 rounded-circle">
+                <i class="fas fa-dollar-sign fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Low Stock Card -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-danger shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+              Atención Requerida
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800" id="low-stock">0</div>
+            <div class="text-xs text-muted mt-1">Productos con Stock Bajo</div>
+          </div>
+          <div class="col-auto">
+            <div class="icon-circle bg-danger text-white p-3 rounded-circle">
+                <i class="fas fa-exclamation-triangle fa-lg"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Rotation Card -->
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card border-left-warning shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+              Sin Rotación (>60d)
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ no_rotation_count }}</div>
+            <div class="text-xs text-muted mt-1">Productos Estancados</div>
+          </div>
+          <div class="col-auto">
+            <div class="icon-circle bg-warning text-white p-3 rounded-circle">
+                <i class="fas fa-clock fa-lg"></i>
+            </div>
+          </div>
+        </div>
+        {% if no_rotation_count > 0 %}
+        <div class="mt-2 text-center">
+            <a href="{{ url_for('reports.no_rotation', days=60) }}" class="small text-warning font-weight-bold stretched-link">Ver reporte &rarr;</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sales Row -->
+<div class="row fade-in">
+    <!-- Today Sales -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Ventas (Hoy)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="today-sales-card">Cargando...</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Month Sales -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Ventas (Mes Actual)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="month-sales-card">Cargando...</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alert Section -->
+{% if low_stock_products %}
+<div class="row fade-in">
+    <div class="col-12 mb-4">
+        <div class="card border-left-danger shadow-sm h-100">
+            <div class="card-header bg-danger text-white py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold">Alerta de Stock Crítico</h6>
+                <span class="badge bg-white text-danger">{{ low_stock_products|length }} Productos</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Stock Actual</th>
+                                <th class="text-center">Mínimo</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in low_stock_products %}
+                            <tr>
+                                <td class="align-middle border-left-danger">
+                                    <span class="font-weight-bold text-gray-800">{{ product.name }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ product.vehicle_type or 'General' }} - {{ product.brand or '' }}</small>
+                                </td>
+                                <td class="text-center align-middle text-danger font-weight-bold">{{ product.quantity }}</td>
+                                <td class="text-center align-middle">{{ product.min_stock }}</td>
+                                <td class="text-center align-middle">
+                                    <a href="{{ url_for('inventory.add_movement') }}?product_id={{ product.id }}&type=entrada" class="btn btn-sm btn-success shadow-sm">
+                                        <i class="fas fa-plus"></i> Surtir
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Row -->
+<div class="row fade-in">
+    <!-- Price Distribution -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Inventario por Precio</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Evolution -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Tendencia de Ventas (7 Días)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Set new default font family and font color to mimic Bootstrap's default styling
+  Chart.defaults.font.family = 'System-UI, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  Chart.defaults.color = '#858796';
+
+  function loadStats() {
+    fetch("/api/products")
+      .then((response) => response.json())
+      .then((data) => {
+        let totalQty = 0;
+        let totalVal = 0;
+        let lowStock = 0;
+
+        const labels = data.map((p) => p.name);
+        const prices = data.map((p) => p.price_usd || 0);
+
+        data.forEach((product) => {
+          totalQty += 1;
+          totalVal += (product.price_usd || 0) * product.quantity;
+          if (product.quantity < 5) lowStock++;
+        });
+
+        document.getElementById("total-products").innerText = data.length;
+        document.getElementById("total-value").innerText = "$" + totalVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Only update if not explicitly set by server, but we use server value for no_rotation
+         document.getElementById("low-stock").innerText = lowStock;
+
+        // Price Chart
+        const ctxPrice = document.getElementById("priceChart").getContext("2d");
+        new Chart(ctxPrice, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Precio ($)",
+                data: prices,
+                backgroundColor: "#4e73df",
+                hoverBackgroundColor: "#2e59d9",
+                borderColor: "#4e73df",
+                borderWidth: 1,
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            maintainAspectRatio: false,
+            layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+            scales: {
+              x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 6 } },
+              y: { ticks: { padding: 10, callback: function(value) { return '$' + value; } }, grid: { color: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } },
+            },
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgb(255,255,255)", bodyColor: "#858796", titleColor: '#6e707e', borderColor: '#dddfeb', borderWidth: 1, padding: 15, displayColors: false, intersect: false, mode: 'index', caretPadding: 10, callbacks: { label: function(context) { var label = context.dataset.label || ''; return label + ': $' + context.parsed.y; } } } }
+          },
+        });
+      });
+
+    // Sales Chart
+    fetch("/api/sales/stats")
+      .then((response) => response.json())
+      .then((data) => {
+        const ctxSales = document.getElementById("salesChart").getContext("2d");
+        new Chart(ctxSales, {
+          type: "line",
+          data: {
+            labels: data.labels,
+            datasets: [
+              {
+                label: "Ventas ($)",
+                data: data.values,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                fill: true,
+                tension: 0.3,
+              },
+            ],
+          },
+          options: {
+            maintainAspectRatio: false,
+            layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+            scales: {
+              x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 7 } },
+              y: { ticks: { maxTicksLimit: 5, padding: 10, callback: function(value) { return '$' + value; } }, grid: { color: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } },
+            },
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: "rgb(255,255,255)", bodyColor: "#858796", titleColor: '#6e707e', borderColor: '#dddfeb', borderWidth: 1, padding: 15, displayColors: false, intersect: false, mode: 'index', caretPadding: 10, callbacks: { label: function(context) { var label = context.dataset.label || ''; return label + ': $' + context.parsed.y; } } } }
+          },
+        });
+      });
+  }
+
+  // Load on start
+  loadStats();
+</script>
+{% endblock %}
