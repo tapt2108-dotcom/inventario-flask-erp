@@ -6,7 +6,7 @@ Este proyecto fue desarrollado como parte de mi portafolio backend, con el objet
 
 ---
 
-## 🚀 Características Principales
+# Características Principales
 
 - Arquitectura modular utilizando Flask Blueprints
 - Control de acceso por roles (Administrador / Vendedor)
@@ -24,7 +24,7 @@ Este proyecto fue desarrollado como parte de mi portafolio backend, con el objet
 
 ---
 
-## 🧠 Aspectos Técnicos Destacados
+##  Aspectos Técnicos Destacados
 
 - Separación de responsabilidades (módulos + capa de servicios)
 - Lógica de negocio centralizada para evitar inconsistencias
@@ -34,7 +34,7 @@ Este proyecto fue desarrollado como parte de mi portafolio backend, con el objet
 
 ---
 
-## 🛠 Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
 - Python
 - Flask
@@ -46,7 +46,7 @@ Este proyecto fue desarrollado como parte de mi portafolio backend, con el objet
 
 ---
 
-## 📦 Instalación
+##  Instalación
 
 Clonar el repositorio:
 
